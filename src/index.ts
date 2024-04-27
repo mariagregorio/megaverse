@@ -3,13 +3,14 @@ import { Megaverse } from "./Megaverse";
 
 const drawService = new DrawService();
 
-const megaverse = new Megaverse(11, 11, drawService);
-// megaverse.drawCross(7, '🪐');
-// megaverse.drawMegaverse();
+const megaverse = new Megaverse(drawService);
 
 const run = async () => {
-    // await megaverse.drawPOLYanetCross(7);
-    console.log(await drawService.getGoal());
+    // PHASE 1
+    // await megaverse.drawPOLYanetCross(11, 11, 7);
+
+    // PHASE 2
+    await megaverse.drawLogo();
 }
 
 run()

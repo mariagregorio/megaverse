@@ -4,6 +4,12 @@ export type PolyanetRequestBody = {
     column: number;
 };
 
+export enum Elements {
+    POLYANET = 'polyanet',
+    SOLOON = 'soloon',
+    COMETH = 'cometh',
+}
+
 export enum SoloonColors {
     RED = 'red',
     BLUE = 'blue',
