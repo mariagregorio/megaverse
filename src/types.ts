@@ -1,7 +1,11 @@
-export type PolyanetRequestBody = {
+import { Cometh, Polyanet, Soloon } from "./MergaverseElements";
+
+export type ElementRequestBody = {
     candidateId?: string;
     row: number;
     column: number;
+    color?: SoloonColors;
+    direction?: ComethDirections;
 };
 
 export enum Elements {
@@ -11,9 +15,9 @@ export enum Elements {
 }
 
 export type ElementsDetails = {
-    polyanets: {coords: Coords}[],
-    soloons: {coords: Coords, color: SoloonColors}[],
-    comeths: {coords: Coords, direction: ComethDirections}[],
+    polyanets: Polyanet[],
+    soloons: Soloon[],
+    comeths: Cometh[],
 }
 
 export enum SoloonColors {
@@ -28,20 +32,6 @@ export enum ComethDirections {
     DOWN = 'down',
     LEFT = 'left',
     RIGHT = 'right',
-}
-
-export type SoloonRequestBody = {
-    candidateId?: string;
-    row: number;
-    column: number;
-    color: SoloonColors;
-}
-
-export type ComethRequestBody = {
-    candidateId?: string;
-    row: number;
-    column: number;
-    direction: ComethDirections
 }
 
 export type Goal = {

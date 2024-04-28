@@ -1,6 +1,8 @@
 import { DrawService } from 'DrawService';
-import { isComposed, threadProcessingPromises } from './utils';
-import { ComethDirections, Coords, Elements, ElementsDetails, SoloonColors } from './types';
+import { isComposed } from './utils';
+import { ComethDirections, Coords, Elements, ElementsDetails, Goal, SoloonColors } from './types';
+import { Cometh, MegaverseElement, Polyanet, Soloon } from './MergaverseElements';
+import { setTimeout } from "timers/promises";
 
 export class Megaverse {
     private drawService: DrawService;
@@ -8,7 +10,6 @@ export class Megaverse {
     constructor(drawService: DrawService) {
         this.drawService = drawService;
     }
-
     public async drawPOLYanetCross(sizeX: number, sizeY: number, crossSize: number): Promise<void> {
         if (crossSize > sizeX || crossSize > sizeY) {
             throw new Error('Cross size exceeds megaverse size limit');
@@ -20,21 +21,21 @@ export class Megaverse {
         let rightPointer = leftPointer + crossSize - 1;
         let topPointer = Math.ceil((sizeY - crossSize) / 2);
 
-        const coordsToProcess = [];
+        const polyanetsToProcess = [];
 
         for (let i = 0; i < crossSize; i++) {
             if (leftPointer === rightPointer) {
-                coordsToProcess.push({ row: topPointer, column: leftPointer });
+                polyanetsToProcess.push(new Polyanet({ row: topPointer, column: leftPointer }, this.drawService));
             } else {
-                coordsToProcess.push({ row: topPointer, column: leftPointer });
-                coordsToProcess.push({ row: topPointer, column: rightPointer });
+                polyanetsToProcess.push(new Polyanet({ row: topPointer, column: leftPointer }, this.drawService));
+                polyanetsToProcess.push(new Polyanet({ row: topPointer, column: rightPointer }, this.drawService));
             }
             leftPointer++;
             rightPointer--;
             topPointer++;
         }
         try {
-            await threadProcessingPromises(coordsToProcess, this.drawService.drawPOLYanet, 2);
+            await this.drawBatchesOfMegaverseElements(polyanetsToProcess, 2);
         } catch (e) {
             console.log('Error drawing POLYanet cross', e.message);
         }
@@ -42,7 +43,7 @@ export class Megaverse {
 
     public async drawLogo(): Promise<void> {
         try {
-            const goal = await this.drawService.getGoal();
+            const goal: Goal = await this.drawService.getGoal();
             const rows = goal.goal.length;
             const cols = goal.goal[0].length;
             const elementsToProcess: ElementsDetails = { polyanets: [], soloons: [], comeths: [] };
@@ -60,12 +61,9 @@ export class Megaverse {
                 }
             }
             try {
-                console.log("processing polyanets...");
-                await threadProcessingPromises(elementsToProcess.polyanets, this.drawService.drawPOLYanet, 2);
-                console.log("processing soloons...");
-                await threadProcessingPromises(elementsToProcess.soloons, this.drawService.drawSOLoon, 2);
-                console.log("processing comeths...");
-                await threadProcessingPromises(elementsToProcess.comeths, this.drawService.drawComETH, 2);
+                for (const elements of Object.entries(elementsToProcess)) {
+                    await this.drawBatchesOfMegaverseElements(elements[1], 2);
+                }
             } catch (e) {
                 console.log('Error drawing logo', e.message);
             }
@@ -82,60 +80,34 @@ export class Megaverse {
     ): void {
         switch (element) {
             case Elements.POLYANET:
-                elementsToProcess.polyanets.push({ coords });
+                const polyanet = new Polyanet(coords, this.drawService);
+                elementsToProcess.polyanets.push(polyanet);
                 break;
             case Elements.SOLOON:
-                elementsToProcess.soloons.push({ coords, color: type as SoloonColors});
+                const soloon = new Soloon(coords, type as SoloonColors, this.drawService);
+                elementsToProcess.soloons.push(soloon);
                 break;
             case Elements.COMETH:
-                elementsToProcess.comeths.push({ coords, direction: type as ComethDirections});
+                const cometh = new Cometh(coords, type as ComethDirections, this.drawService);
+                elementsToProcess.comeths.push(cometh);
                 break;
             default:
                 break;
         }
     }
-}
 
-abstract class MegaverseElement {
-    private coords: Coords;
-
-    constructor(coords: Coords) {
-        this.coords = coords;
-    }
-
-    getCoords(): Coords {
-        return this.coords;
-    }
-
-    setCoords(coords: Coords): void {
-        this.coords = coords;
-    }
-
-    abstract draw(): void;
-}
-
-class Polyanet extends MegaverseElement {
-    draw(): void {}
-}
-
-class Soloon extends MegaverseElement {
-    private color: SoloonColors;
-
-    constructor(coords: Coords, color: SoloonColors) {
-        super(coords);
-        this.color = color;
-    }
-
-    draw(): void {}
-}
-
-class Cometh extends MegaverseElement {
-    private direction: ComethDirections;
-
-    constructor(coords: Coords, direction: ComethDirections) {
-        super(coords);
-        this.direction = direction;
-    }
-
-    draw(): void {}
+    private async drawBatchesOfMegaverseElements(
+        elements: MegaverseElement[],
+        batchSize: number,
+    ) {
+        while (elements.length > 0) {
+            const batch = elements.splice(0, batchSize);
+            try {
+                await setTimeout(Number(process.env.BATCH_DELAY) || 500);
+                await Promise.all(batch.map((el) => el.draw()));
+            } catch (e) {
+                throw new Error('Error while processing batch: ' + e.message);
+            }
+        }
+    };
 }
