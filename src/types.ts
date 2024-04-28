@@ -1,5 +1,5 @@
 export type PolyanetRequestBody = {
-    candidateId: string;
+    candidateId?: string;
     row: number;
     column: number;
 };
@@ -10,6 +10,12 @@ export enum Elements {
     COMETH = 'cometh',
 }
 
+export type ElementsDetails = {
+    polyanets: {coords: Coords}[],
+    soloons: {coords: Coords, color: SoloonColors}[],
+    comeths: {coords: Coords, direction: ComethDirections}[],
+}
+
 export enum SoloonColors {
     RED = 'red',
     BLUE = 'blue',
@@ -17,7 +23,7 @@ export enum SoloonColors {
     WHITE = 'white',
 }
 
-export enum Directions {
+export enum ComethDirections {
     UP = 'up',
     DOWN = 'down',
     LEFT = 'left',
@@ -25,17 +31,17 @@ export enum Directions {
 }
 
 export type SoloonRequestBody = {
-    candidateId: string;
+    candidateId?: string;
     row: number;
     column: number;
     color: SoloonColors;
 }
 
 export type ComethRequestBody = {
-    candidateId: string;
+    candidateId?: string;
     row: number;
     column: number;
-    direction: Directions
+    direction: ComethDirections
 }
 
 export type Goal = {
